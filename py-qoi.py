@@ -1,18 +1,38 @@
-import io
-
+import numpy as np
+import cv2
 
 class qoi_header:
 
     def __init__(self, width=0, height=0, channels=3, colorspace=0):
-        self.magic = intToBinary(ord("q"), 8) + intToBinary(ord("0"), 8) + intToBinary(ord("i"), 8) + intToBinary(ord("f"), 8)  # qoif in binary ASCII
-        self.width = intToBinary(width, 32)  # 32 bit uint
-        self.height = intToBinary(height, 32)  # 32 bit uint
-        self.channels = intToBinary(channels, 8)  # uint8
-        self.colorspace = intToBinary(colorspace, 8)  # uint8
+        self.magic = "qoif"   # qoif in binary ASCII
+        self.width = width # 32 bit uint
+        self.height = height  # 32 bit uint
+        self.channels = channels # uint8
+        self.colorspace = colorspace  # uint8
+
+    def from_bytes(self, byte_header):
+        if len(byte_header) != 14:
+            print("ERROR in qoi_header.from_bytes(), length of header given does not match. Expected 14, was " + str(len(byte_header)))
+            exit()
+        w = "".join([intToBinary(x,8) for x in byte_header[4:8]])
+        h = "".join([intToBinary(x, 8) for x in byte_header[8:12]])
+        ch = intToBinary(byte_header[12], 8)
+        cs = intToBinary(byte_header[13], 8)
+
+        self.width = int(w, 2)
+        self.height = int(h, 2)
+        self.channels = int(ch, 2)
+        self.colorspace = int(cs, 2)
+
 
 
     def toString(self):
-        return self.magic + self.width + self.height + self.channels + self.colorspace
+        magic = "".join([intToBinary(ord(s), 8) for s in self.magic])
+        width = intToBinary(self.width, 32)
+        height = intToBinary(self.height, 32)
+        channels = intToBinary(self.channels, 8)
+        colorspace = intToBinary(self.channels, 8)
+        return magic + width + height + channels + colorspace
 
 # Chunk type specifications
 class QOI_OP_RGB:
@@ -243,25 +263,24 @@ def write(filename, img, debug=False):
 
     return chunks
 
-def read_chunk(file_obj, chunkSize=8):
-    while True:
-        file = file_obj.read(chunkSize)
-        if not file:
-            break
-        yield file
 
 def read(filename, flag=1):
-    RGB_HEADER = b'\xFE'
-    print(RGB)
 
-    file = open(filename, "rb")
-    buffer = io.BytesIO()
-    for chunk in read_chunk(file, chunkSize=1):
-        print(chunk)
-        buffer.write(chunk)
-    buffer.seek(0)
-    for B in buffer:
+    try:
+        with open(filename, "rb") as file:
+            data = list(file.read())
+    except IOError:
+        print("Error while trying to open file " + filename)
 
+    header_bytes = data[0:14]
+    header = qoi_header()
+    header.from_bytes(header_bytes)
+
+    i = 14
+    N = len(data) - 8 # there are 8 EOF bytes
+    while i < N:
+        #todo: implement decoding
+        pass
 
 
 if __name__ == "__main__":
