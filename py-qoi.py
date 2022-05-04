@@ -1,6 +1,3 @@
-import cv2
-
-
 import io
 
 
@@ -16,7 +13,6 @@ class qoi_header:
 
     def toString(self):
         return self.magic + self.width + self.height + self.channels + self.colorspace
-
 
 # Chunk type specifications
 class QOI_OP_RGB:
@@ -270,7 +266,6 @@ def read(filename, flag=1):
 
 if __name__ == "__main__":
     print("Quite Ok Image Format...Testing")
-    testImg = cv2.imread("A.png",0)
-    chunks = write("A.qoi", testImg, debug=False)
+
     read("A.qoi")
 
